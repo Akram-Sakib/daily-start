@@ -1,0 +1,53 @@
+{
+  "name": "daily-start",
+  "productName": "Daily Start",
+  "version": "1.0.0",
+  "description": "A tiny morning dashboard that pushes you into your day. Opens once when your PC starts.",
+  "main": "src/main.js",
+  "author": "Akram",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "start:autostart": "electron . --autostart",
+    "dist": "electron-builder --win",
+    "pack": "electron-builder --win --dir"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-builder",
+      "app-builder-bin",
+      "esbuild"
+    ]
+  },
+  "build": {
+    "appId": "ai.vidrush.dailystart",
+    "productName": "Daily Start",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Daily Start"
+    }
+  }
+}

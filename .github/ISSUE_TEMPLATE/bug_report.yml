@@ -1,0 +1,31 @@
+name: Something is broken
+description: A thing the app did that it shouldn't have
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, and what the app did instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings shows it, or check the installer filename.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 23H2"
+  - type: checkboxes
+    id: settings
+    attributes:
+      label: Anything switched on?
+      options:
+        - label: Open when Windows starts
+        - label: Evening check-in

@@ -1,0 +1,1194 @@
+/* =====================================================================
+   Daily Start — warm paper notebook theme
+
+   Palette: Claude-ish cream + terracotta. One terracotta sequential ramp
+   carries every magnitude (bars, calendar, year strip) — validated for
+   monotone lightness, >= 0.06 dL between steps and a single hue. Every
+   heatmap cell also gets a hairline ring, so the lightest step never
+   depends on fill contrast alone.
+   ===================================================================== */
+
+/* Bundled locally — no network calls, works offline. Licences sit next to
+   the files in src/renderer/fonts/. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url("fonts/inter-var.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Newsreader Variable";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: block;
+  src: url("fonts/newsreader-var.woff2") format("woff2-variations");
+}
+
+:root {
+  /* tells Chromium to draw native bits — the time picker's clock glyph,
+     checkboxes, scrollbars — in the matching scheme */
+  color-scheme: light;
+
+  --paper: #faf9f5;
+  --plane: #f0eee6;
+  --ink: #1f1e1b;
+  --ink-2: #56544e;
+  --muted: #8a877d;
+  --hairline: #e3e0d6;
+  --rule: #d5d1c4;
+  --accent: #c0603a;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(192, 96, 58, 0.11);
+  --good: #4f7a3f;
+  /* the ring only ever sits on an EMPTY cell, so it is measured against
+     the surface, never against a fill */
+  --cell-ring: rgba(31, 30, 27, 0.08);
+  --scrim: rgba(31, 30, 27, 0.34);
+  /* strike sits a touch lighter than the muted text it crosses */
+  --strike: rgba(138, 135, 125, 0.6);
+  /* text that lands on a filled ramp step */
+  --on-fill: rgba(255, 253, 250, 0.9);
+
+  /* sequential ramp: empty + 4 steps, like a contribution graph.
+     Validated (light, on paper): monotone lightness, every adjacent gap
+     >= 0.06 dL, hue spread 8 degrees. The lightest step is allowed to sit
+     close to the surface -- this is a sequential scale, and every cell
+     carries a hairline ring so a boundary never depends on the fill. */
+  --h0: #ece9df;
+  --h1: #e8bda6;
+  --h2: #d68f68;
+  --h3: #b1552f;
+  --h4: #7a3818;
+
+  /* warm-tinted, not neutral grey — it sits on cream paper */
+  --shadow-xs: 0 1px 1.5px rgba(74, 58, 46, 0.07);
+  --shadow: 0 1px 2px rgba(74, 58, 46, 0.05), 0 10px 24px -14px rgba(74, 58, 46, 0.22);
+  --shadow-pop: 0 2px 6px rgba(74, 58, 46, 0.1), 0 18px 40px -18px rgba(74, 58, 46, 0.35);
+  --radius: 14px;
+  /* UI + every chart label stays in the sans; the serif is display-only */
+  --font: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Newsreader Variable", Georgia, "Times New Roman", serif;
+}
+
+html[data-theme="ink"] {
+  color-scheme: dark;
+
+  --paper: #262320;
+  --plane: #1a1815;
+  --ink: #f2eee4;
+  --ink-2: #c0bbaf;
+  --muted: #8f8a7e;
+  --hairline: #383430;
+  --rule: #423d38;
+  --accent: #d3784f;
+  --accent-ink: #1a1815;
+  --accent-wash: rgba(211, 120, 79, 0.16);
+  --good: #8fb87d;
+  --cell-ring: rgba(255, 255, 255, 0.09);
+  --scrim: rgba(10, 9, 8, 0.55);
+  --strike: rgba(143, 138, 126, 0.65);
+  --on-fill: rgba(26, 24, 21, 0.82);
+
+  /* on a dark plane a shadow can only read as depth, not as a drop */
+  --shadow-xs: 0 1px 1.5px rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 26px -14px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 2px 8px rgba(0, 0, 0, 0.45), 0 20px 44px -18px rgba(0, 0, 0, 0.8);
+
+  /* dark steps chosen for the dark surface, not flipped: more = brighter */
+  --h0: #302c28;
+  --h1: #5e3220;
+  --h2: #8f4826;
+  --h3: #c06a3f;
+  --h4: #e5a97f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv05" 1, "cv08" 1, "calt" 1;
+}
+
+/* every icon is line art on currentColor */
+svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ---------------------------- titlebar ---------------------------- */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 8px 0 14px;
+  flex: 0 0 auto;
+  background: var(--plane);
+}
+
+.drag {
+  flex: 1;
+  -webkit-app-region: drag;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.win-actions {
+  display: flex;
+  gap: 3px;
+  -webkit-app-region: no-drag;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-btn:hover {
+  background: var(--hairline);
+  color: var(--ink);
+}
+
+.icon-btn.danger:hover {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+
+/* ----------------------------- sheet ------------------------------ */
+
+.sheet {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0 12px;
+  padding: 22px 22px 26px;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+}
+
+.sheet::-webkit-scrollbar {
+  width: 8px;
+}
+.sheet::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 8px;
+}
+
+/* ----------------------------- hero ------------------------------- */
+
+.hero {
+  margin-bottom: 18px;
+}
+
+.hero-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-icon {
+  flex: 0 0 auto;
+  width: 27px;
+  height: 27px;
+  color: var(--accent);
+  stroke-width: 1.5;
+  /* Measured, not guessed. At 25px Newsreader the line box is 28.75px tall
+     and centres at 79.4, but the capital letters run 67.9 -> 84.9, so their
+     optical centre is 76.4 -- the point the eye actually reads the icon
+     against. Flex centring puts the icon at the line-box centre whatever
+     its size, so the icon needs a fixed -3px to land on the cap centre. */
+  transform: translateY(-3px);
+}
+
+/* the sunset glyph is bottom-weighted inside its box (horizon at the
+   bottom edge), so its own mass needs one more pixel of lift */
+.hero-icon[data-icon="sunset"] {
+  transform: translateY(-4px);
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.date-line {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.streak-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--accent);
+  min-height: 18px;
+}
+
+.streak-icon {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.6;
+}
+
+/* ----------------------------- tabs ------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  margin-bottom: 20px;
+  background: var(--plane);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab.is-active {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-xs);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.section-title {
+  margin: 22px 0 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chart-caption {
+  margin: -6px 0 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* -------------------------- period nav ---------------------------- */
+
+.period {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.per-label {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.per-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--plane);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.per-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.per-btn:hover:not(:disabled) {
+  background: var(--hairline);
+  color: var(--ink);
+}
+
+.per-btn:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+/* --------------------------- progress ----------------------------- */
+
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+
+.progress-label {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.progress-pct {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--plane);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* --------------------------- task list ---------------------------- */
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 4px 9px 2px;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+}
+
+.task:last-child {
+  border-bottom: 0;
+}
+
+.box {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  border: 1.5px solid var(--rule);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.box svg {
+  width: 13px;
+  height: 13px;
+  stroke: var(--accent-ink);
+  stroke-width: 2.6;
+}
+
+.task:hover .box {
+  border-color: var(--accent);
+}
+
+.task.done .box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-title {
+  flex: 1;
+  font-size: 14px;
+  letter-spacing: -0.003em;
+  transition: color 0.15s;
+}
+
+.task.done .task-title {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--strike);
+  text-decoration-thickness: 1.5px;
+}
+
+.task-del {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.task-del svg {
+  width: 13px;
+  height: 13px;
+}
+
+.task:hover .task-del {
+  opacity: 1;
+}
+
+.task-del:hover {
+  color: var(--accent);
+  background: var(--plane);
+}
+
+.recap .task {
+  cursor: default;
+}
+
+.recap .task-title {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.recap .mark {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  color: var(--accent);
+}
+
+.recap .mark svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+}
+
+.recap .mark.miss {
+  color: var(--rule);
+}
+
+.recap .mark.miss svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+}
+
+.empty {
+  padding: 10px 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ---------------------------- add row ----------------------------- */
+
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 6px;
+  padding: 8px 6px 8px 2px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.add-plus {
+  width: 19px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.add-input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  user-select: text;
+}
+
+.add-input::placeholder {
+  color: var(--muted);
+}
+
+/* --------------------------- stat tiles --------------------------- */
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  padding: 11px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 11px;
+  background: var(--plane);
+}
+
+.stat-val {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat-key {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ---------------------------- bar chart --------------------------- */
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 136px;
+  padding-top: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  gap: 5px;
+  cursor: default;
+  min-width: 0;
+}
+
+.bar-val {
+  font-size: 10.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  width: 62%;
+  max-width: 22px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  transition: filter 0.15s;
+}
+
+.bar.zero {
+  background: var(--hairline);
+  height: 2px;
+  border-radius: 2px;
+}
+
+.bar-col:hover .bar {
+  filter: brightness(0.9);
+}
+
+.bar-axis {
+  display: flex;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.bar-axis span {
+  flex: 1;
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--muted);
+  min-width: 0;
+}
+
+.bar-axis span.today {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+/* -------------------------- month calendar ------------------------ */
+
+.cal-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.cal-head span {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-cell {
+  position: relative;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--h0);
+  /* An empty cell is the one step that can sit close to the surface, so it
+     is the one that needs a ring. A filled cell is bounded by its own
+     colour plus the 4px gap, and an inset ring there just muddies the
+     step -- dark-on-dark in one theme, light-on-light in the other. */
+  box-shadow: inset 0 0 0 1px var(--cell-ring);
+  cursor: default;
+}
+
+.cal-cell.l1,
+.cal-cell.l2,
+.cal-cell.l3,
+.cal-cell.l4 {
+  box-shadow: none;
+}
+
+/* days that belong to no month, and days that haven't arrived */
+.cal-cell.blank {
+  background: transparent;
+  box-shadow: none;
+}
+
+.cal-cell.future {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--cell-ring);
+}
+
+.cal-cell.is-today,
+.cal-cell.is-today.l1,
+.cal-cell.is-today.l2,
+.cal-cell.is-today.l3,
+.cal-cell.is-today.l4 {
+  box-shadow: inset 0 0 0 1.6px var(--ink);
+}
+
+.cal-num {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-cell.l3 .cal-num,
+.cal-cell.l4 .cal-num {
+  color: var(--on-fill);
+}
+
+.cal-cell.l1 { background: var(--h1); }
+.cal-cell.l2 { background: var(--h2); }
+.cal-cell.l3 { background: var(--h3); }
+.cal-cell.l4 { background: var(--h4); }
+
+/* ------------------------ contribution graph ----------------------- */
+
+/* A GitHub contribution graph: 7 weekday rows, one column per week,
+   month labels along the top, Mon/Wed/Fri down the left side.
+   The real thing needs ~690px for 53 columns; this window has ~400, so
+   the year is wrapped into two half-year bands instead of being shrunk
+   to unreadable dots or pushed off the edge. Columns are 1fr, so a band
+   always ends flush with the right edge whatever the window width. */
+.gh {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.gh-band {
+  display: grid;
+  grid-template-rows: auto repeat(7, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+
+.gh-month {
+  grid-row: 1;
+  font-size: 9.5px;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.gh-day-label {
+  grid-column: 1;
+  padding-right: 5px;
+  font-size: 9px;
+  line-height: 1;
+  text-align: right;
+  color: var(--muted);
+}
+
+.gh-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 2px;
+  background: var(--h0);
+  box-shadow: inset 0 0 0 1px var(--cell-ring);
+  cursor: default;
+}
+
+.gh-cell.l1,
+.gh-cell.l2,
+.gh-cell.l3,
+.gh-cell.l4 {
+  box-shadow: none;
+}
+
+/* outside the year — nothing to draw */
+.gh-cell.void {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* a real day that hasn't arrived yet */
+.gh-cell.ahead {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--cell-ring);
+}
+
+.gh-cell.is-today {
+  outline: 1.5px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.gh-cell.l1 { background: var(--h1); }
+.gh-cell.l2 { background: var(--h2); }
+.gh-cell.l3 { background: var(--h3); }
+.gh-cell.l4 { background: var(--h4); }
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.hl {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.hl.l0 {
+  box-shadow: inset 0 0 0 1px var(--cell-ring);
+}
+
+.hl.l0 { background: var(--h0); }
+.hl.l1 { background: var(--h1); }
+.hl.l2 { background: var(--h2); }
+.hl.l3 { background: var(--h3); }
+.hl.l4 { background: var(--h4); }
+
+/* --------------------------- rank list ---------------------------- */
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.rank {
+  cursor: default;
+}
+
+.rank-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+  gap: 10px;
+}
+
+.rank-name {
+  font-size: 13.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-num {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.rank-track {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--plane);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+
+.rank-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+/* ----------------------------- table ------------------------------ */
+
+.table-wrap {
+  margin-top: 22px;
+  font-size: 12.5px;
+}
+
+.table-wrap summary {
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  user-select: text;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--hairline);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.data-table td:not(:first-child),
+.data-table th:not(:first-child) {
+  text-align: right;
+  width: 54px;
+}
+
+/* ---------------------------- footer ------------------------------ */
+
+.footer {
+  flex: 0 0 auto;
+  padding: 12px 12px 14px;
+  background: var(--plane);
+}
+
+.start-btn {
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.08s;
+}
+
+.start-btn:hover {
+  filter: brightness(1.06);
+}
+
+.start-btn:active {
+  transform: translateY(1px);
+}
+
+.footer-hint {
+  margin: 7px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---------------------------- settings ---------------------------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 20;
+}
+
+.panel {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.text-input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  background: var(--plane);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  resize: vertical;
+  user-select: text;
+}
+
+.text-input:focus {
+  border-color: var(--accent);
+}
+
+.text-input.mono {
+  line-height: 1.7;
+}
+
+.switch-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 14px;
+  cursor: pointer;
+}
+
+.switch-row input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.switch-row strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.switch-row em {
+  display: block;
+  font-size: 11.5px;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.sub-block {
+  padding: 12px 12px 4px;
+  margin-bottom: 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 11px;
+  background: var(--plane);
+}
+
+.sub-block .switch-row {
+  margin-bottom: 10px;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 0 12px 25px;
+  transition: opacity 0.15s;
+}
+
+.time-row .field-label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Chromium draws the picker's clock glyph itself, as a bitmap we cannot
+   recolour, and whether `color-scheme` lightens it is platform-dependent --
+   on Windows it stays dark. So force it instead of asking: brightness(0)
+   flattens the glyph to black whatever it started as, and invert(1) then
+   takes it to white for the ink theme. Alpha survives both, so the shape
+   stays intact and only its value changes. */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) opacity(0.55);
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  filter: brightness(0) opacity(0.95);
+}
+
+html[data-theme="ink"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: brightness(0) invert(1) opacity(0.6);
+}
+
+html[data-theme="ink"] input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  filter: brightness(0) invert(1) opacity(1);
+}
+
+.time-input {
+  width: 124px;
+  padding: 6px 8px;
+  background: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+
+.time-row .field-hint {
+  margin: 0;
+}
+
+.time-row.off {
+  opacity: 0.45;
+}
+
+/* ---------------------------- tooltip ----------------------------- */
+
+.tooltip {
+  position: fixed;
+  z-index: 40;
+  max-width: 220px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: var(--shadow-pop);
+}

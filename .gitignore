@@ -1,0 +1,16 @@
+# dependencies and build output — never committed, the installer ships via Releases
+node_modules/
+dist/
+out/
+
+# signing material and secrets — committing these is unrecoverable
+*.pfx
+*.p12
+*.snk
+.env
+.env.*
+
+# local noise
+*.log
+.DS_Store
+Thumbs.db
