@@ -1,5 +1,8 @@
 # Daily Start
 
+**[⬇ Download for Windows](../../releases/latest)** — free, no account, nothing
+leaves your computer.
+
 A tiny Electron desktop app: your morning checklist opens **once** when the PC
 starts, pushes you into the day, then gets out of the way. No database — one
 local JSON file.
@@ -60,6 +63,33 @@ To test the startup path without rebooting:
 ```bash
 npm run start:autostart      # first run shows the window
 npm run start:autostart      # second run quits instantly — already opened today
+```
+
+## Releasing
+
+Three different things, easy to confuse:
+
+| | What it is | Can a user use it? |
+|---|---|---|
+| **Tag** | a git label on a commit | No. A bare tag only gets GitHub's auto "Source code (zip)". |
+| **Release** | a page attached to that tag | Yes — this is where people land. |
+| **Release asset** | the `.exe` you attach to it | Yes. This is the actual download. |
+
+Pushing a tag alone gives you a tag, not a release. The workflow in
+`.github/workflows/release.yml` turns the tag into a **draft** release with the
+installer attached — and a draft is invisible to everyone but you until you open
+it and press *Publish release*.
+
+Every release also carries GitHub's automatic "Source code (zip / tar.gz)"
+entries. You can't remove them and they're harmless; just never point people at
+them, because source needs Node installed to run. Point at the `.exe`.
+
+Doing it by hand, when you'd rather not wait for CI:
+
+```powershell
+pnpm dist
+gh release create v1.0.0 "dist\DailyStart-Setup-1.0.0.exe" ^
+  --title "Daily Start 1.0.0" --notes "First release."
 ```
 
 ## Build the .exe
