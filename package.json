@@ -1,7 +1,7 @@
 {
   "name": "daily-start",
   "productName": "Daily Start",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A tiny morning dashboard that pushes you into your day. Opens once when your PC starts.",
   "main": "src/main.js",
   "author": {
