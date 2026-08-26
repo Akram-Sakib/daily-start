@@ -313,7 +313,7 @@ assets/                  app + tray icons
 .github/workflows/       builds the installer when you push a version tag
 .github/ISSUE_TEMPLATE/  the bug form
 package.json .npmrc      build config
-LICENSE README.md        the paperwork
+LICENSE NOTICE README.md the paperwork
 ```
 
 Not in the repo, on purpose: `node_modules/`, `dist/`, and the installer
@@ -347,3 +347,29 @@ demo data, which is handy for tweaking the design without launching Electron.
   from the tray menu.
 - `nodeIntegration` is off, `contextIsolation` is on, and the renderer has a
   strict CSP — it only ever touches the local file through IPC.
+
+## Licence
+
+Copyright 2026 Md Akram Hossain (Akram Sakib).
+
+Licensed under the [Apache Licence, Version 2.0](LICENSE). You may use, modify
+and redistribute this software, including commercially, provided you keep the
+copyright notice, state your changes, and pass along the [NOTICE](NOTICE) file.
+
+**Version 1.0.0 was released under the MIT Licence** and that release stays MIT.
+Version 1.0.1 and later are Apache-2.0.
+
+### Trademarks
+
+**"Daily Start"**, the Daily Start logo and icon are marks of Md Akram Hossain
+(Akram Sakib). The licence covers the *code*, not the *name* — Apache-2.0
+section 6 grants no trademark rights.
+
+So: fork it, build on it, ship it. But ship it under **your own name**. Do not
+publish a rebuild as "Daily Start" on the Microsoft Store or anywhere else, and
+do not imply the original author endorses your version.
+
+### Bundled typefaces
+
+Inter and Newsreader are under the SIL Open Font License 1.1 — their licences
+sit beside the font files in `src/renderer/fonts/`.

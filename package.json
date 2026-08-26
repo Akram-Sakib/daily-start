@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "description": "A tiny morning dashboard that pushes you into your day. Opens once when your PC starts.",
   "main": "src/main.js",
-  "author": "Akram",
-  "license": "MIT",
+  "author": {
+    "name": "Md Akram Hossain (Akram Sakib)",
+    "url": "https://github.com/Akram-Sakib"
+  },
+  "license": "Apache-2.0",
   "private": true,
   "scripts": {
     "start": "electron .",
@@ -31,7 +34,9 @@
     "files": [
       "src/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE",
+      "NOTICE"
     ],
     "win": {
       "target": [
@@ -42,7 +47,8 @@
           ]
         }
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.png",
+      "legalTrademarks": "\"Daily Start\" is a mark of Md Akram Hossain (Akram Sakib)."
     },
     "nsis": {
       "oneClick": false,
@@ -51,6 +57,15 @@
       "createDesktopShortcut": true,
       "shortcutName": "Daily Start",
       "artifactName": "DailyStart-Setup-${version}.${ext}"
-    }
+    },
+    "copyright": "Copyright (c) 2026 Md Akram Hossain (Akram Sakib)"
+  },
+  "homepage": "https://github.com/Akram-Sakib/daily-start",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akram-Sakib/daily-start.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Akram-Sakib/daily-start/issues"
   }
 }

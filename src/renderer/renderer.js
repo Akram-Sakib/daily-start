@@ -1,3 +1,9 @@
+/*
+ * Daily Start - https://github.com/Akram-Sakib/daily-start
+ * Copyright 2026 Md Akram Hossain (Akram Sakib)
+ * Licensed under the Apache Licence, Version 2.0. See LICENSE and NOTICE.
+ */
+
 'use strict';
 
 /* =====================================================================
