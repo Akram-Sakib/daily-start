@@ -234,6 +234,11 @@ function renderFooter() {
     hint.textContent = state.evening.enabled
       ? `Back tonight at ${state.evening.pretty}. Closing the window works too.`
       : "Won't open again today. Closing the window works too.";
+  } else if (state.mode === 'manual' && state.morning.useTime) {
+    btn.textContent = 'Close';
+    hint.textContent = state.evening.enabled
+      ? `Next check-in tonight at ${state.evening.pretty}.`
+      : `Nothing owed today — back tomorrow from ${state.morning.pretty}.`;
   } else {
     btn.textContent = 'Close';
     hint.textContent = state.evening.enabled
@@ -583,26 +588,32 @@ $('#btn-theme').addEventListener('click', async () => {
 
 const panel = $('#settings-panel');
 
-function syncEveningRow() {
-  const on = $('#set-evening').checked;
-  $('#evening-time-row').classList.toggle('off', !on);
-  $('#set-evening-time').disabled = !on;
+function syncTimeRows() {
+  const morningOn = $('#set-morning').checked;
+  $('#morning-time-row').classList.toggle('off', !morningOn);
+  $('#set-morning-time').disabled = !morningOn;
+
+  const eveningOn = $('#set-evening').checked;
+  $('#evening-time-row').classList.toggle('off', !eveningOn);
+  $('#set-evening-time').disabled = !eveningOn;
 }
 
 function openSettings() {
   $('#set-name').value = state.name;
   $('#set-routines').value = state.routines.join('\n');
   $('#set-autolaunch').checked = state.autoLaunch;
+  $('#set-morning').checked = Boolean(state.morning.useTime);
+  $('#set-morning-time').value = state.morning.time || '08:00';
   $('#set-evening').checked = Boolean(state.evening.enabled);
   $('#set-evening-time').value = state.evening.time || '22:00';
-  syncEveningRow();
+  syncTimeRows();
   panel.classList.remove('hidden');
 }
 
 $('#btn-settings').addEventListener('click', openSettings);
 $('#btn-settings-close').addEventListener('click', () => panel.classList.add('hidden'));
-$('#set-evening').addEventListener('change', syncEveningRow);
-$('#set-evening-time').addEventListener('input', syncEveningRow);
+$('#set-morning').addEventListener('change', syncTimeRows);
+$('#set-evening').addEventListener('change', syncTimeRows);
 panel.addEventListener('click', (e) => {
   if (e.target === panel) panel.classList.add('hidden');
 });
@@ -612,6 +623,7 @@ $('#btn-save-settings').addEventListener('click', async () => {
     name: $('#set-name').value,
     routines: $('#set-routines').value.split('\n'),
     autoLaunch: $('#set-autolaunch').checked,
+    morning: { useTime: $('#set-morning').checked, time: $('#set-morning-time').value },
     evening: { enabled: $('#set-evening').checked, time: $('#set-evening-time').value },
   };
   panel.classList.add('hidden');
@@ -746,6 +758,7 @@ function makeDemoApi() {
     routines,
     autoLaunch: true,
     theme: document.documentElement.dataset.theme || 'paper',
+    morning: { useTime: true, time: '08:00', pretty: '8:00 AM' },
     evening: { enabled: true, time: '22:00', pretty: '10:00 PM' },
     mode: 'morning',
     today,

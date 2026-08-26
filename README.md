@@ -9,12 +9,13 @@ local JSON file.
 
 ```
 PC starts → launched with --autostart
-          → is today's checklist still owed?   → show it
-          → "Start My Day", or just close it   → settled, won't pop up again
-          → tomorrow the date changes          → it opens again
+          → before your morning time?          → wait quietly in the tray
+          → at or after it, still owed?        → show it, once
+          → "Start My Day", or just close it   → settled for the day
+          → reboot ten times, it stays shut    → tomorrow it opens again
 
 optional  → evening check-in at your own time (say 22:00)
-          → app waits in the tray, opens once more that night
+          → opens once more that night, to tick off what happened
           → "Wrap Up My Day" closes it until tomorrow
 ```
 
@@ -84,6 +85,29 @@ Every release also carries GitHub's automatic "Source code (zip / tar.gz)"
 entries. You can't remove them and they're harmless; just never point people at
 them, because source needs Node installed to run. Point at the `.exe`.
 
+### What to attach
+
+Only the installer. `dist/` also holds build by-products that are not for
+users:
+
+| In `dist/` | Upload it? |
+|---|---|
+| `DailyStart-Setup-1.0.0.exe` | **Yes — this is the release.** |
+| `win-unpacked/` | No. The app unpacked, ~200 MB, and it's a folder. |
+| `builder-effective-config.yaml`, `builder-debug.yml` | No. Build debug output. |
+| `latest.yml`, `*.exe.blockmap` | Not yet — these are the auto-update feed. Attach them the day `electron-updater` is wired up, and not before. |
+
+The workflow uploads `dist/*.exe`, which matches the installer and nothing
+else: the glob doesn't descend into `win-unpacked/`.
+
+### Writing the notes
+
+Written for someone who has never seen the app, not for you. Four things, in
+this order: what it is, the download and what Windows it needs, what it does,
+and where the data lives. Then the SmartScreen warning — say it plainly, or
+every first-time download turns into a scare. GitHub's *Generate release notes*
+button lists commits; that belongs at the bottom, if at all, never as the body.
+
 Doing it by hand, when you'd rather not wait for CI:
 
 ```powershell
@@ -132,6 +156,26 @@ gate applies. Turning it off removes the entry.
 It works in dev mode too (it registers `electron.exe` with the project path),
 but for daily use install the packaged build — the registry entry then points
 at a stable path.
+
+## When it opens
+
+Two times, both yours, both in Settings.
+
+**Not before a set time** — off by default, in which case the checklist appears
+on any launch, whatever the hour. Switch it on and pick a time (say 08:00) and
+nothing appears before then. Boot at 06:30 and the app waits in the tray until
+08:00, then opens once. That waiting is why it needs to be resident: at 06:30
+nothing else is around to wake it at 08:00.
+
+**Evening check-in** — off by default. See below.
+
+Whichever one opens, it opens **once**. Answer it and the day is closed: reboot
+as many times as you like, nothing reappears until tomorrow.
+
+If the first launch of a day happens after both times have passed — say you only
+turn the PC on at 23:00 — you get **one** window, framed as the evening
+check-in, and answering it closes both slots. Being asked twice in the same
+minute would be silly.
 
 ## The two buttons
 

@@ -183,6 +183,20 @@
 
         <div class="sub-block">
           <label class="switch-row">
+            <input id="set-morning" type="checkbox" />
+            <span>
+              <strong>Not before a set time</strong>
+              <em>Otherwise it appears as soon as you turn the PC on, whatever the hour.</em>
+            </span>
+          </label>
+          <div id="morning-time-row" class="time-row">
+            <label class="field-label" for="set-morning-time">Open from</label>
+            <input id="set-morning-time" type="time" class="text-input time-input" value="08:00" />
+          </div>
+        </div>
+
+        <div class="sub-block">
+          <label class="switch-row">
             <input id="set-evening" type="checkbox" />
             <span>
               <strong>Evening check-in</strong>

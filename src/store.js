@@ -16,11 +16,14 @@ const path = require('path');
 const KEEP_DAYS = 366 * 6; // ~6 years of history, then the oldest days fall off
 
 const DEFAULT_DATA = {
-  version: 3,
+  version: 4,
   name: 'Akram',
   routines: ['Job', 'Gym', 'SaaS - 2 hours', 'Study'],
   autoLaunch: true,
   theme: 'paper',
+  // When the morning checklist is allowed to appear. useTime false means
+  // "as soon as the PC starts", which is the default behaviour.
+  morning: { useTime: false, time: '08:00' },
   // Second look at the checklist late in the evening. Off by default.
   evening: { enabled: false, time: '22:00' },
   days: {},
@@ -100,6 +103,7 @@ class Store {
       const parsed = JSON.parse(fs.readFileSync(this.file, 'utf8'));
       const data = { ...structuredClone(DEFAULT_DATA), ...parsed };
       // v1 files have no `evening` block
+      data.morning = { ...DEFAULT_DATA.morning, ...(parsed.morning || {}) };
       data.evening = { ...DEFAULT_DATA.evening, ...(parsed.evening || {}) };
       return migrate(data);
     } catch (err) {
@@ -333,6 +337,7 @@ class Store {
     const slot = this.slot(name, now);
     slot.done = true;
     if (!slot.at) slot.at = now.toISOString();
+    this.settleOverdue(name, now);
     this.save();
     return slot;
   }
@@ -345,36 +350,86 @@ class Store {
   markDismissed(name, now = new Date()) {
     const slot = this.slot(name, now);
     if (!slot.done) slot.dismissed = true;
+    this.settleOverdue(name, now);
     this.save();
     return slot;
   }
 
   /**
-   * What is this launch for?
-   *   'morning'  -> the checklist is still owed today
-   *   'evening'  -> the evening time has passed and that slot is still owed
-   *   null       -> nothing owed; an automatic launch should stay quiet
+   * Answering one slot also closes any other slot whose time has already
+   * passed. Without this, opening the app for the first time at 11pm would
+   * answer the morning slot and then be asked about the evening thirty
+   * seconds later -- two windows for one sitting.
    */
-  dueMode(now = new Date()) {
-    const day = this.ensureToday(now);
-    if (!settled(day.morning)) return 'morning';
-
-    const evening = this.data.evening || {};
-    if (!evening.enabled) return null;
-    const at = minutesOf(evening.time);
-    if (at === null || settled(day.evening)) return null;
-    return now.getHours() * 60 + now.getMinutes() >= at ? 'evening' : null;
+  settleOverdue(answered, now = new Date()) {
+    ['morning', 'evening'].forEach((name) => {
+      if (name === answered) return;
+      if (this.slotDue(name, now)) this.slot(name, now).dismissed = true;
+    });
   }
 
-  /** True while an evening check-in is still ahead of us today. */
-  eveningPending(now = new Date()) {
+  /** Minutes past midnight, right now. */
+  nowMinutes(now = new Date()) {
+    return now.getHours() * 60 + now.getMinutes();
+  }
+
+  /**
+   * Is a slot allowed to appear yet? The morning slot is gated by its own
+   * time only when you asked for one; the evening slot always is.
+   */
+  slotDue(name, now = new Date()) {
+    const day = this.ensureToday(now);
+    if (settled(day[name])) return false;
+
+    if (name === 'morning') {
+      const morning = this.data.morning || {};
+      if (!morning.useTime) return true; // any launch will do
+      const at = minutesOf(morning.time);
+      return at === null ? true : this.nowMinutes(now) >= at;
+    }
+
     const evening = this.data.evening || {};
     if (!evening.enabled) return false;
     const at = minutesOf(evening.time);
-    if (at === null) return false;
+    return at === null ? false : this.nowMinutes(now) >= at;
+  }
+
+  /** A slot whose time has not arrived yet -- worth waiting in the tray for. */
+  slotAhead(name, now = new Date()) {
     const day = this.data.days[dateKey(now)];
-    if (day && settled(day.evening)) return false;
-    return now.getHours() * 60 + now.getMinutes() < at;
+    if (day && settled(day[name])) return false;
+
+    if (name === 'morning') {
+      const morning = this.data.morning || {};
+      if (!morning.useTime) return false; // no time to wait for
+      const at = minutesOf(morning.time);
+      return at !== null && this.nowMinutes(now) < at;
+    }
+
+    const evening = this.data.evening || {};
+    if (!evening.enabled) return false;
+    const at = minutesOf(evening.time);
+    return at !== null && this.nowMinutes(now) < at;
+  }
+
+  /**
+   * What is this launch for?
+   *   'evening'  -> the evening check-in is owed and its time has passed
+   *   'morning'  -> the checklist is owed and allowed to show
+   *   null       -> nothing owed right now; an automatic launch stays quiet
+   *
+   * Evening wins when both are owed, because by then the day is over and
+   * reviewing it beats planning it.
+   */
+  dueMode(now = new Date()) {
+    if (this.slotDue('evening', now)) return 'evening';
+    if (this.slotDue('morning', now)) return 'morning';
+    return null;
+  }
+
+  /** True while any slot is still ahead of us today. */
+  pendingAhead(now = new Date()) {
+    return this.slotAhead('morning', now) || this.slotAhead('evening', now);
   }
 
   setSettings(patch = {}) {
@@ -389,6 +444,12 @@ class Store {
     }
     if (typeof patch.autoLaunch === 'boolean') this.data.autoLaunch = patch.autoLaunch;
     if (patch.theme === 'paper' || patch.theme === 'ink') this.data.theme = patch.theme;
+    if (patch.morning && typeof patch.morning === 'object') {
+      const next = { ...this.data.morning };
+      if (typeof patch.morning.useTime === 'boolean') next.useTime = patch.morning.useTime;
+      if (minutesOf(patch.morning.time) !== null) next.time = patch.morning.time;
+      this.data.morning = next;
+    }
     if (patch.evening && typeof patch.evening === 'object') {
       const next = { ...this.data.evening };
       if (typeof patch.evening.enabled === 'boolean') next.enabled = patch.evening.enabled;
@@ -409,7 +470,9 @@ class Store {
  * reads as done, an old unfinished one as still owed.
  */
 function migrate(data) {
-  if (Number(data.version) >= 3) return data;
+  if (Number(data.version) >= 4) {
+    return data;
+  }
   Object.values(data.days || {}).forEach((day) => {
     if (!day.morning) {
       day.morning = { done: Boolean(day.opened), dismissed: false, at: day.startedAt || null };
@@ -420,7 +483,7 @@ function migrate(data) {
     delete day.eveningOpened;
     delete day.eveningAt;
   });
-  data.version = 3;
+  data.version = 4;
   return data;
 }
 

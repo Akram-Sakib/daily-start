@@ -61,9 +61,10 @@ function bootstrap() {
   const due = store.dueMode();
 
   if (IS_AUTOSTART && !due) {
-    // Nothing to show right now. Either linger quietly for tonight's
-    // check-in, or get out of the way completely.
-    if (store.eveningPending()) {
+    // Nothing to show right now. Either linger quietly until a slot's time
+    // arrives -- the morning one if you set a time for it, or tonight's
+    // check-in -- or get out of the way completely.
+    if (store.pendingAhead()) {
       createTray();
       startTicker();
       return;
@@ -148,7 +149,7 @@ function showWindow(nextMode = 'manual') {
  * only difference is that the button records the day as actually started,
  * and the close button records that you saw it and moved on.
  *
- * If an evening check-in is still ahead we hide and wait in the tray;
+ * If a slot is still ahead of us today we hide and wait in the tray;
  * otherwise the app exits so nothing lingers in the background.
  */
 function dismissWindow({ settle = true } = {}) {
@@ -157,7 +158,7 @@ function dismissWindow({ settle = true } = {}) {
   }
   mode = 'manual';
 
-  if (store.eveningPending()) {
+  if (store.pendingAhead()) {
     win?.hide();
     refreshTray();
     return;
@@ -183,13 +184,22 @@ function createTray() {
 
 function refreshTray() {
   if (!tray) return;
+  const morning = store.data.morning || {};
   const evening = store.data.evening || {};
-  const label = evening.enabled ? `Evening check-in at ${prettyTime(evening.time)}` : 'Evening check-in off';
-  tray.setToolTip(`Daily Start — ${label}`);
+  const morningLabel = morning.useTime
+    ? `Morning checklist from ${prettyTime(morning.time)}`
+    : 'Morning checklist when the PC starts';
+  const eveningLabel = evening.enabled
+    ? `Evening check-in at ${prettyTime(evening.time)}`
+    : 'Evening check-in off';
+
+  tray.setToolTip(`Daily Start — ${morningLabel}`);
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: 'Open dashboard', click: () => showWindow('manual') },
-      { label, enabled: false },
+      { type: 'separator' },
+      { label: morningLabel, enabled: false },
+      { label: eveningLabel, enabled: false },
       { type: 'separator' },
       {
         label: 'Quit',
@@ -240,7 +250,7 @@ function startTicker() {
     }
 
     // Nothing owed and no window anywhere -> stop lingering in the tray.
-    if (!due && !onScreen && !store.eveningPending()) app.quit();
+    if (!due && !onScreen && !store.pendingAhead()) app.quit();
   }, TICK_MS);
 }
 
@@ -273,6 +283,7 @@ function snapshot() {
     routines: store.data.routines,
     autoLaunch: Boolean(store.data.autoLaunch),
     theme: store.data.theme === 'ink' ? 'ink' : 'paper',
+    morning: { ...store.data.morning, pretty: prettyTime(store.data.morning.time) },
     evening: { ...store.data.evening, pretty: prettyTime(store.data.evening.time) },
     mode,
     today: { key: dateKey(now), ...today },
@@ -314,7 +325,8 @@ ipcMain.handle('settings:set', (_e, patch) => {
   store.setSettings(patch || {});
   syncAutoLaunch();
   refreshTray();
-  if (store.eveningPending()) createTray();
+  if (store.pendingAhead()) createTray();
+  else refreshTray();
   return snapshot();
 });
 
@@ -333,7 +345,7 @@ ipcMain.handle('window:close', () => dismissWindow());
 
 app.on('window-all-closed', () => {
   // Resident only while an evening check-in is still coming.
-  if (!store || !store.eveningPending()) {
+  if (!store || !store.pendingAhead()) {
     clearInterval(ticker);
     app.quit();
   }
