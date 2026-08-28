@@ -22,6 +22,29 @@ optional  → evening check-in at your own time (say 22:00)
 Launching it yourself (desktop icon / Start menu / tray) **always** opens the
 window, so you can come back to it any time during the day.
 
+## What it looks like
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/today-paper.png" alt="The morning checklist in the paper theme: greeting, streak, progress bar, four tasks, and yesterday's recap" /></td>
+    <td width="50%"><img src="assets/screenshots/month-paper.png" alt="Month view: done / rate / active / streak tiles above a calendar heatmap, one square per day" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Today — the list, and how yesterday went</em></td>
+    <td align="center"><em>Month — a square per day, darker means more done</em></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/today-ink.png" alt="The same morning checklist in the dark ink theme" /></td>
+    <td width="50%"><img src="assets/screenshots/year-ink.png" alt="Year view in the ink theme: month-by-month bar chart of tasks completed" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Ink theme — one click from the titlebar</em></td>
+    <td align="center"><em>Year — month by month, and every day below</em></td>
+  </tr>
+</table>
+
+Sample data, not a real week. Your own numbers stay on your own machine.
+
 ## Run it
 
 ```bash
@@ -309,7 +332,7 @@ hundred KB). If the file ever gets corrupted it's renamed to
 
 ```
 src/                     the app
-assets/                  app + tray icons
+assets/                  app + tray icons, README screenshots
 .github/workflows/       builds the installer when you push a version tag
 .github/ISSUE_TEMPLATE/  the bug form
 .github/PULL_REQUEST_TEMPLATE.md

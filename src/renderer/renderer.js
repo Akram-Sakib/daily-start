@@ -680,7 +680,9 @@ function makeDemoApi() {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   const dayFor = (k, i) => {
-    const seed = (parse(k).getTime() / 86400000 + 3) % 7;
+    // floor first: local midnight is not a whole number of days from the
+    // epoch outside UTC, and a fractional seed made every demo day perfect
+    const seed = (Math.floor(parse(k).getTime() / 86400000) + 3) % 7;
     const tasks = routines.map((title, idx) => ({ title, done: (seed + idx) % 4 !== 0 }));
     if (seed === 5) tasks.length = 0;
     return {
@@ -730,6 +732,8 @@ function makeDemoApi() {
     const out = {
       scope: sc,
       anchor: fmt(start),
+      start: fmt(start),
+      end: fmt(end),
       label,
       days,
       stats: {
