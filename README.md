@@ -312,8 +312,11 @@ src/                     the app
 assets/                  app + tray icons
 .github/workflows/       builds the installer when you push a version tag
 .github/ISSUE_TEMPLATE/  the bug form
+.github/PULL_REQUEST_TEMPLATE.md
 package.json .npmrc      build config
-LICENSE NOTICE README.md the paperwork
+LICENSE NOTICE           the paperwork
+CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md
+README.md                this file
 ```
 
 Not in the repo, on purpose: `node_modules/`, `dist/`, and the installer
@@ -347,6 +350,17 @@ demo data, which is handy for tweaking the design without launching Electron.
   from the tray menu.
 - `nodeIntegration` is off, `contextIsolation` is on, and the renderer has a
   strict CSP — it only ever touches the local file through IPC.
+
+## Contributing
+
+Bugs and small fixes are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for
+the scope, the house style, and how to get it running. Ideas and feature
+requests belong in
+[Discussions](https://github.com/Akram-Sakib/daily-start/discussions) rather
+than issues.
+
+Found a security problem? Please don't open a public issue —
+[SECURITY.md](SECURITY.md) explains where to send it.
 
 ## Licence
 

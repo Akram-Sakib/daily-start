@@ -5,7 +5,7 @@
   "description": "A tiny morning dashboard that pushes you into your day. Opens once when your PC starts.",
   "main": "src/main.js",
   "author": {
-    "name": "Md Akram Hossain (Akram Sakib)",
+    "name": "Md Akram Hossain",
     "url": "https://github.com/Akram-Sakib"
   },
   "license": "Apache-2.0",
@@ -48,7 +48,7 @@
         }
       ],
       "icon": "assets/icon.png",
-      "legalTrademarks": "\"Daily Start\" is a mark of Md Akram Hossain (Akram Sakib)."
+      "legalTrademarks": "Daily Start is a mark of Md Akram Hossain (Akram Sakib)."
     },
     "nsis": {
       "oneClick": false,
