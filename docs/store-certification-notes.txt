@@ -1,0 +1,36 @@
+Daily Start is a morning checklist for Windows. There is no sign-in, no test
+account and no hidden or locked content -- every feature is available
+immediately on first launch.
+
+Please read point 1 before testing.
+
+1) EXPECTED BEHAVIOUR THAT CAN LOOK LIKE A FAILURE TO LAUNCH
+   The app deliberately shows its window only ONCE per calendar day. On first
+   launch you will see the checklist. If you then press "Start My Day" or close
+   the window, that day is settled and an automatic launch (with the
+   --autostart flag) will intentionally exit without showing a window until the
+   next day. This once-a-day behaviour is the app's core feature, not a bug.
+
+   To open the window again during testing, launch the app MANUALLY from the
+   Start menu, the desktop shortcut, or the notification-area icon. A manual
+   launch always opens the window, regardless of the once-a-day state.
+
+2) "Open when Windows starts" is OFF by default (gear icon -> Settings). When
+   enabled, the app registers a per-user login item that launches it with the
+   --autostart flag. Nothing is written outside the current user's profile.
+
+3) "Not before a set time" and "Evening check-in" are both OFF by default, also
+   under Settings. To verify either one quickly, switch it on and set its time
+   to one or two minutes ahead of the current clock; the window appears once at
+   that time. While waiting, the app sits in the notification area with no
+   window on screen -- this is intended.
+
+4) The app makes NO network requests of any kind. There is no sign-in,
+   analytics, crash reporting, advertising or update check, and the fonts are
+   bundled rather than downloaded. It runs fully offline. If your tooling flags
+   the complete absence of network activity, that is expected.
+
+5) All user data is stored in one plain-text JSON file at
+   %APPDATA%\Daily Start\daily-start.json
+
+Platform: Windows 10 and 11, x64. Built with Electron.
