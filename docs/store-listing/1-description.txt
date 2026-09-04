@@ -1,0 +1,31 @@
+Most checklists wait for you to remember them. Daily Start doesn't.
+
+Pick a time — 8 in the morning, say — and the app appears then, once, with today's list already built from your own routine. Tick what you've done, press Start My Day, and it's gone until tomorrow. Restart the machine five times; it stays shut. A prompt you can't escape is a prompt you learn to ignore, so this one only ever asks once.
+
+Underneath today's list sits yesterday's, so you can see what slipped without going looking for it.
+
+WHAT YOU GET
+
+Your routine, rebuilt every morning. Write the list once in Settings and it comes back each day, fresh and unticked. Add one-off things for today whenever you like.
+
+Four views of the same days. Today for the list. Week for a bar per day. Month as a real calendar, each square shaded by how much you finished. Year as a contribution graph — one square per day, wrapped into two half-year bands so a whole year fits on screen. Every period steps backwards as far as your history goes.
+
+An optional evening check-in. Turn it on, pick an hour, and the app returns once that night so you can tick off what actually happened rather than what you planned at breakfast.
+
+Two themes. Warm paper and warm ink, switched from the titlebar.
+
+YOUR DATA STAYS YOURS
+
+Daily Start makes no network requests of any kind. There is no account, no sign-in, no cloud, no analytics, no crash reporting, no advertising. It works with the Wi-Fi off. Even the fonts are bundled inside the app rather than fetched from a font service.
+
+Everything you type lives in one plain-text JSON file at %APPDATA%\Daily Start\daily-start.json. Open it, read it, back it up, sync it yourself, delete it. Nothing is hidden from you and nothing is sent anywhere.
+
+The app is free and open source, so you don't have to take any of that on trust — you can read the code.
+
+GOOD TO KNOW
+
+Opening the app yourself, from the Start menu or the tray icon, always shows the window. The once-a-day rule only governs the automatic morning appearance.
+
+Closing the window counts as an answer. Press the button or hit the close icon — either settles the day. Minimising doesn't, so you can park it and come back.
+
+Windows 10 and 11, 64-bit.

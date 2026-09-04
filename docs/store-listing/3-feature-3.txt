@@ -1,0 +1,1 @@
+Week, month and year views, including a contribution graph of every day you turned up

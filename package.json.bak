@@ -1,7 +1,7 @@
 {
   "name": "daily-start",
   "productName": "Daily Start",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "A tiny morning dashboard that pushes you into your day. Opens once when your PC starts.",
   "main": "src/main.js",
   "author": {
@@ -51,12 +51,12 @@
       "legalTrademarks": "Daily Start is a mark of Md Akram Hossain (Akram Sakib)."
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "Daily Start",
-      "artifactName": "DailyStart-Setup-${version}.${ext}",
-      "runAfterFinish": true
+      "artifactName": "DailyStart-Setup-${version}.${ext}"
     },
     "copyright": "Copyright (c) 2026 Md Akram Hossain (Akram Sakib)"
   },

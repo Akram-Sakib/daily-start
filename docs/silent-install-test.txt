@@ -1,0 +1,60 @@
+Testing silent install before resubmitting to the Microsoft Store
+=================================================================
+
+Microsoft rejected 1.0.1 under policy 10.2.9.2 with:
+"Win32 products must install silently."
+
+Run this test yourself before resubmitting. It is the same thing their
+tester does, and it costs two minutes instead of another review cycle.
+
+1) Uninstall any existing Daily Start first, so this is a clean install
+   like their test device.
+
+   Settings -> Apps -> Installed apps -> Daily Start -> Uninstall
+
+2) Build the new installer.
+
+   pnpm dist
+
+3) Run it silently from PowerShell, in the project folder:
+
+   $p = Start-Process -FilePath ".\dist\DailyStart-Setup-1.0.2.exe" -ArgumentList "/S" -PassThru -Wait
+   $p.ExitCode
+
+4) What PASSING looks like:
+
+   - No window appears. No wizard, no progress bar, no banner, nothing.
+   - No UAC prompt (this is a per-user install).
+   - The command returns within a few seconds.
+   - $p.ExitCode prints 0
+   - The app is installed at:
+       %LOCALAPPDATA%\Programs\daily-start
+   - "Daily Start" is in the Start menu, and a desktop shortcut exists.
+   - The app does NOT launch by itself. A silent install must not open a
+     window; the installer template skips the post-install launch when /S
+     is passed, so this is expected.
+
+   If ANY window appears, or the command hangs, or the exit code is not 0,
+   do not resubmit -- it will fail certification again.
+
+5) Then check the normal path still works: double-click the installer
+   without /S. It should install and launch the app, with no wizard.
+   That is what one-click means now -- there is no folder-choosing page
+   any more.
+
+6) Upload the new file, keeping the old one in place:
+       https://daily-start-downloads.netlify.app/DailyStart-Setup-1.0.2.exe
+   Update the Package URL in Partner Center to that, keep Installer
+   parameters as /S, and resubmit.
+
+Why 1.0.1 failed
+----------------
+1.0.1 was built as an "assisted" installer (oneClick: false). In
+electron-builder's NSIS templates the assisted installer's silent path
+runs through the UAC plugin's outer/inner instance handling and does not
+end in quitSuccess -- which is where silent installs are known to hang.
+The one-click path is guarded differently: it skips the banner and the
+post-install launch when silent, and exits through quitSuccess with 0.
+
+Changed in 1.0.2: oneClick true, allowToChangeInstallationDirectory
+removed (assisted-only option), runAfterFinish set explicitly.

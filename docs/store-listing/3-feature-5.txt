@@ -1,0 +1,1 @@
+No account, no telemetry, no network calls — one JSON file on your own disk
