@@ -34,7 +34,10 @@ jobs:
       # through pnpm.onlyBuiltDependencies
       - run: pnpm install --no-frozen-lockfile
 
-      - run: pnpm dist
+      # --publish never: on a tag, electron-builder would otherwise try to
+      # upload to GitHub Releases itself and fail without GH_TOKEN. The
+      # release step below does the upload instead.
+      - run: pnpm dist --publish never
 
       - uses: softprops/action-gh-release@v2
         with:
